@@ -37,7 +37,7 @@ html,body,button{touch-action:manipulation;-webkit-tap-highlight-color:transpare
 #counter{color:var(--dim)}
 
 #map{position:absolute;left:18px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5}
-#map canvas{display:block;width:96px;height:181px;cursor:crosshair;opacity:.85}
+#map canvas{display:block;width:96px;height:220px;cursor:crosshair;opacity:.85}
 
 #panel{position:absolute;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);width:min(300px,calc(100% - 40px));z-index:6;display:grid;gap:8px;justify-items:end;text-align:right}
 #p-title{margin:0;font-size:28px;line-height:1.05;font-weight:400}
@@ -81,25 +81,25 @@ html,body,button{touch-action:manipulation;-webkit-tap-highlight-color:transpare
 @media (max-width:700px){
   #top .name{font-size:24px}#nav{font-size:17px}
   #map{left:auto;right:18px;bottom:auto;top:calc(env(safe-area-inset-top,0px) + 16px)}
-  #map canvas{width:56px;height:106px}
+  #map canvas{width:56px;height:128px}
   #bottom{left:18px;right:18px;transform:none;justify-content:space-between;gap:0}
   #panel{left:18px;right:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 50px);justify-items:start;text-align:left}
   #p-title{font-size:24px}
   #hint{bottom:calc(env(safe-area-inset-bottom,0px) + 50px)}
 }
-@media (max-height:640px) and (min-width:701px){#map canvas{width:68px;height:128px}}
+@media (max-height:640px) and (min-width:701px){#map canvas{width:68px;height:156px}}
 #joy{position:absolute;width:104px;height:104px;margin:-52px 0 0 -52px;border:1px solid rgba(255,255,255,.55);border-radius:50%;z-index:4;pointer-events:none}
 #joy i{position:absolute;left:50%;top:50%;width:38px;height:38px;margin:-19px 0 0 -19px;border-radius:50%;background:rgba(255,255,255,.85)}
 @media (pointer:coarse){
   .t{padding:9px 8px;margin:-9px -8px}
   #nav{gap:6px}
   #map{left:auto;right:18px;bottom:auto;top:calc(env(safe-area-inset-top,0px) + 16px)}
-  #map canvas{width:56px;height:106px}
+  #map canvas{width:56px;height:128px}
   #loading{top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 52px)}
 }
 @media (pointer:coarse) and (max-height:500px){
   #top .name{font-size:22px}#nav{font-size:16px;gap:2px}
-  #map canvas{width:44px;height:83px}
+  #map canvas{width:44px;height:101px}
   #intro h1{font-size:40px}
   #p-title{font-size:22px}
 }
@@ -118,7 +118,7 @@ html,body,button{touch-action:manipulation;-webkit-tap-highlight-color:transpare
     </nav>
   </header>
 
-  <div id="map" hidden><canvas id="mapc" width="236" height="445" aria-label="Floor plan"></canvas></div>
+  <div id="map" hidden><canvas id="mapc" width="236" height="541" aria-label="Floor plan"></canvas></div>
 
   <aside id="panel" hidden aria-live="polite">
     <h2 id="p-title"></h2>
@@ -165,10 +165,10 @@ const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const coarse=matchMedia('(pointer: coarse)').matches;
 
 /* ================= plan (meters). x = east, z = south. Windows on the north wall (z = -7). ================= */
-const X0=-3.75,X1=3.75,ZN=-4,ZS=10.5,H=3.8,EYE=1.6,IN=.0254,HANG=57*IN;
+const X0=-2.35,X1=3.75,XC=(X0+X1)/2,ZN=-4,ZS=10.5,H=3.8,EYE=1.6,IN=.0254,HANG=57*IN;
 const CYC={x0:-1.25,x1:3.75,face:6.2,back:6.4,r:.9,top:3.3,floorFrom:1.5};
 const DOOR={z:9.1,w:1.0,h:2.2};
-const WINS=[{x:-1.85,w:2.0},{x:1.55,w:1.75}],WB=1.05,WH=2.55;
+const WINS=[{x:-.8,w:1.8},{x:1.96,w:1.6}],WB=1.05,WH=2.55;
 const FACE_RY={s:0,e:Math.PI/2,n:Math.PI,w:-Math.PI/2};
 const FACE_N={s:[0,1],e:[1,0],n:[0,-1],w:[-1,0]};
 
@@ -201,14 +201,14 @@ function row(ids,face,fixed,start,dir){const o={};let p=start;ids.forEach(id=>{c
 const PORT={'14':[-1.3,ZS,'n',HANG],'15':[.55,ZS,'n',HANG],'16':[1.6,ZS,'n',HANG],'02':[2.95,CYC.back,'s',HANG],'17':[1.24,CYC.back+.112,'s',1.26],'01':[-.35,CYC.back,'s',HANG]};
 function redRow(){const o={},ids=['r6','12','rb','rc','rd'];let p=3.42;ids.forEach(id=>{const w=W[id];const c=p-w.ow/2;o[id]=[c,CYC.face,'n',HANG];p-=w.ow+.36});return o}
 const OPTS={
- A:{walls:[[-2.25,X1,-.65,-.35]],
+ A:{walls:[[X0+1.4,X1,-.65,-.35]],
     place:Object.assign({},PORT,row(['03','d1','d2','d3'],'e',X0,4.65,-1),
-      {'13':[-.0875,ZN,'s',1.62],e2:[X1,-3.0,'w',HANG],e3:[X1,-1.6,'w',HANG],e4:[2.4,-.65,'n',HANG],e5:[.9,-.65,'n',HANG],e6:[-.6,-.65,'n',HANG]},redRow()),
-    bench:[.4,-2.2]},
- B:{walls:[[.15,.45,-2.0,1.2]],
+      {'13':[.63,ZN,'s',1.62],e2:[X1,-3.0,'w',HANG],e3:[X1,-1.6,'w',HANG],e4:[3.0,-.65,'n',HANG],e5:[1.7,-.65,'n',HANG],e6:[.4,-.65,'n',HANG]},redRow()),
+    bench:[1.0,-2.2]},
+ B:{walls:[[.55,.85,-2.0,1.2]],
     place:Object.assign({},PORT,row(['03','d1','d2','d3'],'e',X0,3.1,-1),
-      {'13':[-.0875,ZN,'s',1.62],e2:[X1,-2.7,'w',HANG],e3:[.45,-1.25,'e',HANG],e4:[X1,-.8,'w',HANG],e5:[.45,.45,'e',HANG],e6:[X1,1.1,'w',HANG]},redRow()),
-    bench:[-1.9,-3.05],eastLight:1}
+      {'13':[.63,ZN,'s',1.62],e2:[X1,-2.7,'w',HANG],e3:[.85,-1.25,'e',HANG],e4:[X1,-.8,'w',HANG],e5:[.85,.45,'e',HANG],e6:[X1,1.1,'w',HANG]},redRow()),
+    bench:[-.75,-3.1],eastLight:1}
 };
 const O=OPTS[OPT];
 const TOUR=['14','15','16','02','17','01','03','d1','d2','d3','13','e2','e3','e4','e5','e6','r6','12','rb','rc','rd'];
@@ -259,7 +259,7 @@ const city=new THREE.Mesh(new THREE.PlaneGeometry(110,26),new THREE.MeshBasicMat
 function plaster(base){const c=mk(512,512),g=c.getContext('2d');g.fillStyle=base;g.fillRect(0,0,512,512);noise(g,512,512,5);return c}
 const wallMat=new THREE.MeshStandardMaterial({map:T(plaster('#e7e6e2'),[3,1]),roughness:.95});
 function plane(w,h,mat,x,y,z,ry,rx){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),mat);m.position.set(x,y,z);m.rotation.set(rx||0,ry||0,0);scene.add(m);return m}
-occluders.push(plane(ZS-ZN,H,wallMat,X0,H/2,(ZN+ZS)/2,Math.PI/2),plane(ZS-ZN,H,wallMat,X1,H/2,(ZN+ZS)/2,-Math.PI/2),plane(X1-X0,H,wallMat,0,H/2,ZS,Math.PI));
+occluders.push(plane(ZS-ZN,H,wallMat,X0,H/2,(ZN+ZS)/2,Math.PI/2),plane(ZS-ZN,H,wallMat,X1,H/2,(ZN+ZS)/2,-Math.PI/2),plane(X1-X0,H,wallMat,XC,H/2,ZS,Math.PI));
 const baseMat=new THREE.MeshStandardMaterial({color:0xdcd9d2,roughness:.8});
 [X0+.01,X1-.01].forEach(x=>{const b=new THREE.Mesh(new THREE.BoxGeometry(.02,.12,ZS-ZN),baseMat);b.position.set(x,.06,(ZN+ZS)/2);scene.add(b)});
 function windowWall(){const ppm=150,cw=Math.round((X1-X0)*ppm),ch=Math.round(H*ppm),c=mk(cw,ch),g=c.getContext('2d');
@@ -270,22 +270,22 @@ function windowWall(){const ppm=150,cw=Math.round((X1-X0)*ppm),ch=Math.round(H*p
     g.fillStyle='#1b1c1e';g.fillRect(x0,y0,wp,9);g.fillRect(x0,y0+hp-9,wp,9);g.fillRect(x0,y0,9,hp);g.fillRect(x0+wp-9,y0,9,hp);
     for(let i=1;i<4;i++)g.fillRect(x0+wp*i/4-3,y0,6,hp);for(let j=1;j<6;j++)g.fillRect(x0,y0+hp*j/6-3,wp,j===3?10:6);
     const [rx,ry]=P(o.x-o.w*.36,.72);g.fillStyle='#cfccc3';for(let k=0;k<22;k++)g.fillRect(rx+k*o.w*.72*ppm/22,ry,o.w*.72*ppm/22-4,.56*ppm)});return c}
-occluders.push(plane(X1-X0,H,new THREE.MeshStandardMaterial({map:T(windowWall()),transparent:true,alphaTest:.5,roughness:.95,side:THREE.DoubleSide}),0,H/2,ZN));
+occluders.push(plane(X1-X0,H,new THREE.MeshStandardMaterial({map:T(windowWall()),transparent:true,alphaTest:.5,roughness:.95,side:THREE.DoubleSide}),XC,H/2,ZN));
 const revealMat=new THREE.MeshStandardMaterial({color:0x7d7a74,roughness:1});
 WINS.forEach(o=>{[[o.w,.02,.4,o.x,WB,ZN-.2],[o.w,.02,.4,o.x,WB+WH,ZN-.2],[.02,WH,.4,o.x-o.w/2,WB+WH/2,ZN-.2],[.02,WH,.4,o.x+o.w/2,WB+WH/2,ZN-.2]].forEach(a=>{const b=new THREE.Mesh(new THREE.BoxGeometry(a[0],a[1],a[2]),revealMat);b.position.set(a[3],a[4],a[5]);scene.add(b)})});
 function maple(){const w=1024,h=1024,c=mk(w,h),g=c.getContext('2d');const sw=w/16;for(let i=0;i<16;i++){let y=-R()*200;while(y<h){const len=120+R()*360,l=R();g.fillStyle=`rgb(${150+l*38|0},${106+l*28|0},${64+l*20|0})`;g.fillRect(i*sw,y,sw,len);g.fillStyle='rgba(40,25,10,.5)';g.fillRect(i*sw,y,sw,2);g.fillRect(i*sw,y,1.5,len);y+=len}}
   for(let i=0;i<600;i++){g.fillStyle=`rgba(50,30,15,${R()*.12})`;g.fillRect(R()*w,R()*h,R()*3,R()*40)}noise(g,w,h,10);return c}
-const floor=plane(X1-X0,ZS-ZN,new THREE.MeshStandardMaterial({map:T(maple(),[(X1-X0)/1.6,(ZS-ZN)/1.6]),roughness:.55}),0,0,(ZN+ZS)/2,0,-Math.PI/2);walkables.push(floor);
+const floor=plane(X1-X0,ZS-ZN,new THREE.MeshStandardMaterial({map:T(maple(),[(X1-X0)/1.6,(ZS-ZN)/1.6]),roughness:.55}),XC,0,(ZN+ZS)/2,0,-Math.PI/2);walkables.push(floor);
 function tin(){const s=512,c=mk(s,s),g=c.getContext('2d');g.fillStyle='#d8d3c7';g.fillRect(0,0,s,s);
   for(let k=0;k<4;k++){const p=20+k*38;g.strokeStyle=k%2?'rgba(255,255,250,.5)':'rgba(90,82,70,.42)';g.lineWidth=4;g.strokeRect(p,p,s-p*2,s-p*2)}
   g.strokeStyle='rgba(70,60,50,.6)';g.lineWidth=3;g.strokeRect(1,1,s-2,s-2);
   for(let i=0;i<40;i++){const x=R()*s,y=R()*s,r=2+R()*14;g.fillStyle=`rgba(${110+R()*40|0},${90+R()*30|0},60,${.15+R()*.35})`;g.beginPath();g.arc(x,y,r,0,7);g.fill()}noise(g,s,s,12);return c}
-{const m=new THREE.Mesh(new THREE.PlaneGeometry(X1-X0,ZS-ZN),new THREE.MeshStandardMaterial({map:T(tin(),[(X1-X0)/.62,(ZS-ZN)/.62]),roughness:.75,metalness:.1}));m.rotation.x=Math.PI/2;m.position.set(0,H,(ZN+ZS)/2);scene.add(m)}
+{const m=new THREE.Mesh(new THREE.PlaneGeometry(X1-X0,ZS-ZN),new THREE.MeshStandardMaterial({map:T(tin(),[(X1-X0)/.62,(ZS-ZN)/.62]),roughness:.75,metalness:.1}));m.rotation.x=Math.PI/2;m.position.set(XC,H,(ZN+ZS)/2);scene.add(m)}
 const pipeMat=new THREE.MeshStandardMaterial({color:0xe6e3dc,roughness:.6});
 [-1.3,1.9].forEach(x=>{const p=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,ZS-ZN,10),pipeMat);p.rotation.x=Math.PI/2;p.position.set(x,H-.16,(ZN+ZS)/2);scene.add(p)});
-[-2.6,1.4,5.2,8.8].forEach(z=>{const p=new THREE.Mesh(new THREE.CylinderGeometry(.024,.024,X1-X0,8),pipeMat);p.rotation.z=Math.PI/2;p.position.set(0,H-.09,z);scene.add(p)});
+[-2.6,1.4,5.2,8.8].forEach(z=>{const p=new THREE.Mesh(new THREE.CylinderGeometry(.024,.024,X1-X0,8),pipeMat);p.rotation.z=Math.PI/2;p.position.set(XC,H-.09,z);scene.add(p)});
 const trackMat=new THREE.MeshStandardMaterial({color:0x18191b,roughness:.5});
-[[-2.35,ZN+.6,CYC.face-.2],[2.35,ZN+.6,CYC.floorFrom-.4]].forEach(([x,z0,z1])=>{const t=new THREE.Mesh(new THREE.BoxGeometry(.04,.04,z1-z0),trackMat);t.position.set(x,H-.3,(z0+z1)/2);scene.add(t)});
+[[X0+.85,ZN+.6,CYC.face-.2],[2.6,ZN+.6,CYC.floorFrom-.4]].forEach(([x,z0,z1])=>{const t=new THREE.Mesh(new THREE.BoxGeometry(.04,.04,z1-z0),trackMat);t.position.set(x,H-.3,(z0+z1)/2);scene.add(t)});
 {const t=new THREE.Mesh(new THREE.BoxGeometry(CYC.x1-CYC.x0-.4,.04,.04),trackMat);t.position.set((CYC.x0+CYC.x1)/2,H-.3,3.6);scene.add(t)}
 {const f=new THREE.Mesh(new THREE.BoxGeometry(.13,.06,1.25),new THREE.MeshStandardMaterial({color:0xcfcfca}));f.position.set(.7,H-.55,-2.5);f.rotation.y=.5;scene.add(f)}
 
@@ -332,7 +332,7 @@ for(let j=0;j<3;j++)[-1,1].forEach(s=>bulb(MIR.x+s*(MIR.w/2-.03),MIR.y+.15-j*.15
 box(.4,.68,.48,new THREE.MeshStandardMaterial({color:0xf0f0ee,roughness:.6}),1.82,.34,PZ+.26);
 [[.55,PZ+.85],[1.25,PZ+.95]].forEach(([x,z],i)=>{cyl(.17,.04,i?blackM:steel,x,i?.62:.66,z);[0,1,2].forEach(k=>{const a=k*2.1;const l=cyl(.012,.65,i?blackM:steel,x+Math.cos(a)*.12,.32,z+Math.sin(a)*.12);l.rotation.z=Math.cos(a)*.12;l.rotation.x=-Math.sin(a)*.12})});
 const ledMat=new THREE.MeshBasicMaterial({color:0xf5f8ff});
-[-1.9,.3,2.4].forEach(x=>{box(1.1,.06,.56,new THREE.MeshStandardMaterial({color:0xf2f2f0}),x,3.05,8.1);const f=new THREE.Mesh(new THREE.PlaneGeometry(1.04,.5),ledMat);f.rotation.x=Math.PI/2;f.position.set(x,3.019,8.1);scene.add(f);
+[-1.3,.75,2.65].forEach(x=>{box(1.1,.06,.56,new THREE.MeshStandardMaterial({color:0xf2f2f0}),x,3.05,8.1);const f=new THREE.Mesh(new THREE.PlaneGeometry(1.04,.5),ledMat);f.rotation.x=Math.PI/2;f.position.set(x,3.019,8.1);scene.add(f);
   [-.45,.45].forEach(d=>cyl(.003,H-3.08,blackM,x+d,(H+3.08)/2,8.1));const l=new THREE.PointLight(0xeef2ff,.85,8,2);l.position.set(x,2.8,8.1);scene.add(l)});
 {const rx=X1-.42,z0=8.95,z1=10.1;cyl(.014,1.65,chrome,rx,.85,z0);cyl(.014,1.65,chrome,rx,.85,z1);cyl(.014,z1-z0+.06,chrome,rx,1.66,(z0+z1)/2,Math.PI/2);
  [z0,z1].forEach(z=>cyl(.012,.5,chrome,rx,.04,z,0,Math.PI/2));
@@ -367,10 +367,10 @@ WINS.forEach(o=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(o.w*1.05,2.6),ne
 /* lights */
 scene.add(new THREE.HemisphereLight(0x3a4970,0x110c08,.24));
 {const l=new THREE.DirectionalLight(0x9db2e4,.35);l.position.set(-4,8,-14);scene.add(l)}
-{const l=new THREE.PointLight(0x6a80b8,1.1,9,2);l.position.set(0,2.4,ZN+.8);scene.add(l)}
+{const l=new THREE.PointLight(0x6a80b8,1.1,9,2);l.position.set(XC,2.4,ZN+.8);scene.add(l)}
 {const s=new THREE.SpotLight(0xfff0dc,1.6,9,.75,.7,1.2);s.position.set(1.25,H-.3,2.2);s.target.position.set(1.25,1.6,CYC.face);scene.add(s,s.target)}
-{const l=new THREE.PointLight(0xffe6c8,.4,10,2);l.position.set(-1.8,3.2,1.0);scene.add(l)}
-if(O.eastLight){const l=new THREE.PointLight(0xffe6c8,.95,8,2);l.position.set(2.1,3.1,-.6);scene.add(l)}
+{const l=new THREE.PointLight(0xffe6c8,.4,10,2);l.position.set(-1.3,3.2,1.0);scene.add(l)}
+if(O.eastLight){const l=new THREE.PointLight(0xffe6c8,.95,8,2);l.position.set(2.3,3.1,-.6);scene.add(l)}
 
 /* ================= hang the works ================= */
 function poolCanvas(){const c=mk(256,320),g=c.getContext('2d'),r=g.createRadialGradient(128,120,0,128,150,170);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.45,'rgba(255,255,255,.38)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,256,320);return c}
@@ -430,7 +430,7 @@ function findPath(ax,az,bx,bz){
 
 /* ================= camera control ================= */
 let yaw=-1.35,pitch=.02,entered=false,current=-1,move=null,bob=0;const vel={x:0,z:0};
-cam.position.set(-3.0,EYE,DOOR.z);
+cam.position.set(X0+.7,EYE,DOOR.z);
 const angDiff=(a,b)=>{let d=(b-a)%(Math.PI*2);if(d>Math.PI)d-=Math.PI*2;if(d<-Math.PI)d+=Math.PI*2;return d};
 function travel(tx,tz,fyaw,fpitch,done){
   const p=cam.position,path=findPath(p.x,p.z,tx,tz);
