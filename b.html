@@ -29,6 +29,7 @@ html,body,button{touch-action:manipulation;-webkit-tap-highlight-color:transpare
 
 #top{position:absolute;left:18px;top:calc(env(safe-area-inset-top,0px) + 14px);z-index:5;display:grid;gap:10px;justify-items:start}
 #top .name{font-size:30px;line-height:1;margin:0;font-weight:400}
+.embed #top .name{display:none}
 #rooms{display:flex;gap:14px;margin-top:6px}#rooms .on{opacity:1}#rooms a{color:#fff;text-decoration:none;opacity:.45}
 #nav{display:grid;gap:1px;font-size:19px;line-height:1.15;justify-items:start}
 
@@ -215,6 +216,7 @@ const NUM={};TOUR.forEach((id,i)=>NUM[id]=i);
 const seriesIdx={};TOUR.forEach(id=>{const s=W[id].s;seriesIdx[s]=(seriesIdx[s]||0)+1;W[id].k=seriesIdx[s]});
 const seriesCount={};TOUR.forEach(id=>{const s=W[id].s;seriesCount[s]=(seriesCount[s]||0)+1});
 
+if(ROOMS&&window.top!==window.self)document.documentElement.classList.add('embed');
 if(ROOMS){const r=$('#rooms');['A','B'].forEach(k=>{const a=document.createElement('a');a.textContent='Room '+k;a.className='t'+(k===OPT?' on':'');if(k!==OPT)a.href=ROOMS[k]+'#in';else a.setAttribute('aria-current','page');r.appendChild(a)});r.hidden=false}
 $('#i-ctrl').textContent=coarse?'Left thumb to walk · Right thumb to look':'Mouse to look · W A S D to walk';
 $('#lock-sub').textContent='W A S D to walk · Esc to release';
