@@ -229,17 +229,17 @@ function cityCanvas(){const w=2048,h=512,c=mk(w,h),g=c.getContext('2d');let x=0;
 const city=new THREE.Mesh(new THREE.PlaneGeometry(110,26),new THREE.MeshBasicMaterial({map:T(cityCanvas()),transparent:true}));city.position.set(0,-7,-46);scene.add(city);
 
 /* ================= room: measured model from Blender, lighting baked into a lightmap ================= */
-const texL=new THREE.TextureLoader();
+const texL=new THREE.TextureLoader();const AV='?b=1792050737';
 function tex(u){const t=texL.load(u);t.encoding=THREE.sRGBEncoding;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=maxAniso;t.flipY=false;return t}
-const lmTex=texL.load(ASSET+'lm_'+OPT.toLowerCase()+'.jpg',()=>{roomParts++;setLoading()});lmTex.encoding=THREE.sRGBEncoding;lmTex.flipY=false;lmTex.anisotropy=maxAniso;
+const lmTex=texL.load(ASSET+'lm_'+OPT.toLowerCase()+'.jpg'+AV,()=>{roomParts++;setLoading()});lmTex.encoding=THREE.sRGBEncoding;lmTex.flipY=false;lmTex.anisotropy=maxAniso;
 const ALBEDO={floor_maple:'maple.jpg',ceiling_tin:'tin.jpg',brick_painted:'brick.jpg',wall_plaster:'plaster.jpg',portable_wall:'plaster.jpg'};
 const REPEAT={floor_maple:2};   /* uv0 is in tiles: floor tile 2.4 m -> texture every 1.2 m */
 let roomParts=0;const roomTotal=2;
-new THREE.GLTFLoader().load(ASSET+'room_'+OPT.toLowerCase()+'.glb',g=>{
+new THREE.GLTFLoader().load(ASSET+'room_'+OPT.toLowerCase()+'.glb'+AV,g=>{
   g.scene.traverse(o=>{if(!o.isMesh)return;const m=o.material,n=m.name;
     if(n==='vanity_bulb'||n==='led_panel'){o.material=new THREE.MeshBasicMaterial({color:n==='vanity_bulb'?0xfff0d0:0xf2f6ff});return}
     const mb=new THREE.MeshBasicMaterial({color:m.color.clone(),lightMap:lmTex,lightMapIntensity:LMK});
-    if(ALBEDO[n]){mb.map=tex(ASSET+ALBEDO[n]);if(REPEAT[n])mb.map.repeat.set(REPEAT[n],REPEAT[n]);mb.color.setRGB(1,1,1)}
+    if(ALBEDO[n]){mb.map=tex(ASSET+ALBEDO[n]+AV);if(REPEAT[n])mb.map.repeat.set(REPEAT[n],REPEAT[n]);mb.color.setRGB(1,1,1)}
     if(n==='mirror'){mb.lightMap=null;mb.color.setRGB(.42,.45,.5)}
     if(n==='baseboard'){mb.lightMap=null;mb.color.setRGB(.29,.275,.25)}   /* too thin for the lightmap to stay clean */
     o.material=mb;
