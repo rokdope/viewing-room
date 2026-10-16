@@ -20,7 +20,7 @@ body{background:#000;color:var(--ink);font-family:var(--serif);overflow:hidden;-
 #app::before,#app::after{content:"";position:absolute;left:0;right:0;pointer-events:none;z-index:3}
 #app::before{top:0;height:160px;background:linear-gradient(rgba(0,0,0,.42),rgba(0,0,0,0))}
 #app::after{bottom:0;height:190px;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.5))}
-.mono{font-family:var(--mono);font-size:11px;letter-spacing:.02em;text-transform:uppercase;font-variant-numeric:tabular-nums}
+.mono{font-family:var(--serif);font-size:15px;letter-spacing:0;font-variant-numeric:tabular-nums}
 .t{all:unset;cursor:pointer;color:var(--ink)}
 @media (hover:hover){.t:hover{opacity:.6}}
 html,body,button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
@@ -45,10 +45,13 @@ html,body,button{touch-action:manipulation;-webkit-tap-highlight-color:transpare
 #p-acts{display:flex;gap:18px;margin-top:6px}
 
 #intro{position:absolute;inset:0;z-index:10;background:rgba(0,0,0,.28)}
-#intro .inner{position:absolute;left:18px;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);display:grid;gap:14px;justify-items:start}
-#intro h1{margin:0;font-weight:400;font-size:clamp(40px,6vw,76px);line-height:.95}
-#enter{font-size:22px}
-#i-ctrl{color:var(--dim)}
+#intro{cursor:pointer}
+#intro .inner{position:absolute;left:18px;top:calc(env(safe-area-inset-top,0px) + 54px);display:grid;gap:1px;justify-items:start;font-size:19px;line-height:1.15}
+.embed #intro .inner{top:calc(env(safe-area-inset-top,0px) + 14px)}
+#intro h1{margin:0 0 1.15em;font-weight:400;font-size:inherit;line-height:inherit}
+#intro .meta{color:var(--dim)}
+#enter{font-size:inherit}
+#i-ctrl{position:absolute;left:18px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);color:var(--dim);max-width:calc(100% - 36px)}
 
 .sheet-wrap{position:absolute;inset:0;z-index:20;background:#000;overflow:auto;padding:calc(env(safe-area-inset-top,0px) + 14px) 18px calc(env(safe-area-inset-bottom,0px) + 30px)}
 .sheet-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:26px}
@@ -105,18 +108,24 @@ html,body,button{touch-action:manipulation;-webkit-tap-highlight-color:transpare
 @media (pointer:coarse) and (max-height:500px){
   #top .name{font-size:22px}#nav{font-size:16px;gap:2px}
   #map canvas{width:44px;height:94px}
-  #intro h1{font-size:40px}
   #p-title{font-size:22px}
   #joy{width:96px;height:96px;bottom:calc(env(safe-area-inset-bottom,0px) + 48px)}
+}
+@media (pointer:coarse){
+  #bottom{left:0;right:0;transform:none;bottom:0;padding:0 0 env(safe-area-inset-bottom,0px);gap:0;justify-content:space-between;font-size:17px}
+  #bottom .t{padding:18px 18px 16px;margin:0;flex:1}#bottom #next{text-align:right}
+  #counter{padding:18px 0 16px}
+  #panel{left:18px;right:18px;width:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 62px);justify-items:start;text-align:left}
+  #hint{top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 64px)}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
 <div id="app">
-  <canvas id="scene" tabindex="0" role="img" aria-label="Rocky Yang, Selected Works — virtual exhibition"></canvas>
+  <canvas id="scene" tabindex="0" role="img" aria-label="Rocky, Selected Works — virtual exhibition"></canvas>
 
   <header id="top">
-    <p class="name">Rocky Yang</p>
+    <p class="name">Rocky</p>
     <nav id="nav" hidden>
       <button class="t" id="b-index">Index</button>
       <button class="t" id="b-full" hidden>Full screen</button>
@@ -134,20 +143,20 @@ html,body,button{touch-action:manipulation;-webkit-tap-highlight-color:transpare
 
   <p id="hint" class="mono" hidden></p>
   <div id="joy" hidden><i></i></div><div id="cross" hidden></div><div id="aim" class="mono" hidden></div>
-  <div id="lockmsg" hidden><b>Click to continue</b><span class="mono" id="lock-sub"></span></div>
+  <div id="lockmsg" hidden><b>Click to look around</b><span class="mono" id="lock-sub"></span></div>
 
   <nav id="bottom" class="mono" hidden aria-label="Works">
-    <button class="t" id="prev">← Prev</button>
+    <button class="t" id="prev">Previous</button>
     <span id="counter">— / —</span>
-    <button class="t" id="next">Next →</button>
+    <button class="t" id="next">Next</button>
   </nav>
 
   <section id="intro">
     <div class="inner">
-      <h1>Selected Works</h1>
-      <button class="t" id="enter">Enter →</button>
-      <span class="mono" id="i-ctrl"></span>
+      <h1>Selected Works<br><span class="meta" id="i-meta"></span></h1>
+      <button class="t" id="enter">Enter</button>
     </div>
+    <span class="mono" id="i-ctrl"></span>
   </section>
 
   <div class="sheet-wrap" id="index" hidden role="dialog" aria-label="Index">
@@ -191,10 +200,11 @@ const seriesCount={};TOUR.forEach(id=>{const s=W[id].s;seriesCount[s]=(seriesCou
 
 if(ROOMS&&window.top!==window.self)document.documentElement.classList.add('embed');
 if(ROOMS&&Object.keys(ROOMS).length>1){const r=$('#rooms');Object.keys(ROOMS).forEach(k=>{const a=document.createElement('a');a.textContent='Room '+k;a.className='t'+(k===OPT?' on':'');if(k!==OPT){a.href=new URLSearchParams(location.search).has('full')?fullHref(k):ROOMS[k]+location.search+'#in';a.onclick=e=>{e.preventDefault();location.replace(a.href)}}else a.setAttribute('aria-current','page');r.appendChild(a)});r.hidden=false}
-$('#i-ctrl').textContent=coarse?'Joystick to walk · Drag to look':'Mouse to look · W A S D to walk';
-$('#lock-sub').textContent='W A S D to walk · Esc to release';
+$('#i-meta').textContent=TOUR.length+' photographs';
+$('#i-ctrl').textContent=coarse?'Swipe left and right to go from work to work. Tap a work to see it larger.':'Move the mouse to look around, W A S D to walk.';
+$('#lock-sub').textContent='W A S D to walk, Esc to let go of the mouse';
 
-try{await Promise.race([Promise.all(['400 40px "Newsreader"','400 20px "DM Mono"'].map(f=>document.fonts.load(f))),new Promise(r=>setTimeout(r,2500))])}catch(e){}
+try{await Promise.race([Promise.all(['400 40px "Newsreader"'].map(f=>document.fonts.load(f))),new Promise(r=>setTimeout(r,2500))])}catch(e){}
 
 /* ================= renderer ================= */
 const canvas=$('#scene');
@@ -229,7 +239,7 @@ function cityCanvas(){const w=2048,h=512,c=mk(w,h),g=c.getContext('2d');let x=0;
 const city=new THREE.Mesh(new THREE.PlaneGeometry(110,26),new THREE.MeshBasicMaterial({map:T(cityCanvas()),transparent:true}));city.position.set(0,-7,-46);scene.add(city);
 
 /* ================= room: measured model from Blender, lighting baked into a lightmap ================= */
-const texL=new THREE.TextureLoader();const AV='?b=1792060702';
+const texL=new THREE.TextureLoader();const AV='?b=1792184624';
 function tex(u){const t=texL.load(u);t.encoding=THREE.sRGBEncoding;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=maxAniso;t.flipY=false;return t}
 const lmTex=texL.load(ASSET+'lm_'+OPT.toLowerCase()+'.jpg'+AV,()=>{roomParts++;setLoading()});lmTex.encoding=THREE.sRGBEncoding;lmTex.flipY=false;lmTex.anisotropy=maxAniso;
 const ALBEDO={floor_maple:'maple.jpg',ceiling_tin:'tin.jpg',brick_painted:'brick.jpg',wall_plaster:'plaster.jpg',portable_wall:'plaster.jpg'};
@@ -249,7 +259,7 @@ new THREE.GLTFLoader().load(ASSET+'room_'+OPT.toLowerCase()+'.glb'+AV,g=>{
 
 /* title vinyl on the east wall, by the cyc */
 function titleCanvas(){const c=mk(2000,800),g=c.getContext('2d');g.fillStyle='#1d1d1e';
-  g.font='400 150px "Newsreader", Georgia, serif';g.fillText('Rocky Yang',40,250);g.fillText('Selected Works',40,430);return c}
+  g.font='400 150px "Newsreader", Georgia, serif';g.fillText('Rocky',40,250);g.fillText('Selected Works',40,430);return c}
 {const m=new THREE.Mesh(new THREE.PlaneGeometry(1.5,.6),new THREE.MeshBasicMaterial({map:T(titleCanvas()),transparent:true,depthWrite:false,color:0xb9b6b0}));
  m.position.set(X1-.006,1.62,6.3);m.rotation.y=-Math.PI/2;scene.add(m)}
 /* evidence markers in front of Redacted */
@@ -340,7 +350,7 @@ function openPanel(w){
 }
 function closePanel(){$('#panel').hidden=true;if(typeof setModeUI==='function')setModeUI()}
 $('#p-close').onclick=closePanel;
-$('#p-full').onclick=()=>{if(isLocked())document.exitPointerLock();const w=W[TOUR[current]];if(!w)return;$('#lb-img').src=w.src;$('#lb-img').alt=w.t;$('#lb-title').textContent=`${w.t}${w.t!==w.s?', '+w.s:''} — ${w.k} / ${seriesCount[w.s]}`;$('#lightbox').hidden=false;$('#lb-close').focus()};
+$('#p-full').onclick=()=>{if(isLocked())document.exitPointerLock();const w=W[TOUR[current]];if(!w)return;$('#lb-img').src=w.src;$('#lb-img').alt=w.t;$('#lb-title').textContent=`${w.t}${w.t!==w.s?', '+w.s:''} — ${w.k} / ${seriesCount[w.s]}`;$('#lightbox').hidden=false;if(!coarse)$('#lb-close').focus()};
 $('#lb-close').onclick=()=>{$('#lightbox').hidden=true;setModeUI()};
 $('#lightbox').addEventListener('click',e=>{if(e.target.id==='lightbox'||e.target.classList.contains('stage'))$('#lightbox').hidden=true});
 function renderIndex(){const body=$('#index-body');body.innerHTML='';let last=null,grid=null;
@@ -356,7 +366,7 @@ $('#close-index').onclick=()=>{$('#index').hidden=true;setModeUI()};
 $('#index').addEventListener('click',e=>{if(e.target.id==='index')$('#index').hidden=true});
 $('#prev').onclick=()=>focus(current<0?TOUR.length-1:current-1);
 $('#next').onclick=()=>focus(current<0?0:current+1);
-let hintT;function hint(ms){const h=$('#hint');h.textContent=coarse?'Joystick to walk · Drag to look · Tap a work':'Drag to look · Click the floor to walk';
+let hintT;function hint(ms){const h=$('#hint');h.textContent=coarse?'Swipe for the next work':'Drag to look around, click the floor to walk';
   h.hidden=false;h.classList.remove('fade');clearTimeout(hintT);if(ms)hintT=setTimeout(()=>{h.classList.add('fade');setTimeout(()=>{h.hidden=true},400)},ms)}
 
 /* ================= minimap ================= */
@@ -390,9 +400,19 @@ function joyEnd(e){if(e.pointerId!==joy.id)return;joy.id=null;joy.f=joy.s=0;joyE
 joyEl.addEventListener('pointerdown',e=>{if(!entered||joy.id!==null)return;e.preventDefault();joy.id=e.pointerId;move=null;joyEl.classList.add('on');try{joyEl.setPointerCapture(e.pointerId)}catch(err){}joyMove(e)});
 joyEl.addEventListener('pointermove',e=>{if(e.pointerId===joy.id)joyMove(e)});
 ['pointerup','pointercancel','lostpointercapture'].forEach(t=>joyEl.addEventListener(t,joyEnd));
-canvas.addEventListener('pointerdown',e=>{if(!entered)return;if(isLocked())return;if(mode==='fps'&&e.pointerType==='mouse'){lock();return}
+const ROUTE=coarse;   /* phones: fixed route through the works, one thumb */
+let sw=null;
+if(ROUTE){
+  canvas.addEventListener('pointerdown',e=>{if(!entered||sw)return;sw={id:e.pointerId,x:e.clientX,y:e.clientY,t:performance.now()}},{capture:true});
+  const swEnd=e=>{if(!sw||e.pointerId!==sw.id)return;const dx=e.clientX-sw.x,dy=e.clientY-sw.y,dt=performance.now()-sw.t;sw=null;
+    if(e.type!=='pointerup')return;
+    if(Math.abs(dx)>36&&Math.abs(dx)>Math.abs(dy)*1.1){$('#hint').hidden=true;if(dx<0)$('#next').click();else $('#prev').click();return}
+    if(Math.abs(dx)<10&&Math.abs(dy)<10&&dt<500){const h=pick(e);if(h&&h.object.userData.id){const i=NUM[h.object.userData.id];if(i===current&&!move)$('#p-full').click();else focus(i)}}};
+  canvas.addEventListener('pointerup',swEnd,{capture:true});canvas.addEventListener('pointercancel',swEnd,{capture:true});
+}
+canvas.addEventListener('pointerdown',e=>{if(!entered||ROUTE)return;if(isLocked())return;if(mode==='fps'&&e.pointerType==='mouse'){lock();return}
   if(ptr.down)return;ptr.down=true;ptr.id=e.pointerId;ptr.x=ptr.sx=e.clientX;ptr.y=ptr.sy=e.clientY;ptr.moved=false;try{canvas.setPointerCapture(e.pointerId)}catch(err){}});
-canvas.addEventListener('pointermove',e=>{if(!entered||isLocked())return;
+canvas.addEventListener('pointermove',e=>{if(!entered||ROUTE||isLocked())return;
   if(ptr.down&&e.pointerId===ptr.id){const dx=e.clientX-ptr.x,dy=e.clientY-ptr.y;ptr.x=e.clientX;ptr.y=e.clientY;
     if(!ptr.moved&&Math.hypot(e.clientX-ptr.sx,e.clientY-ptr.sy)>6){ptr.moved=true;canvas.classList.add('drag');if(move&&move.done){move.done=null}}
     if(ptr.moved){const k=coarse?.0055:.0034;yaw+=dx*k;pitch=Math.max(-1.1,Math.min(1.1,pitch+dy*k));if(move){move.fyaw=null;move.fpitch=null}}}
@@ -400,7 +420,7 @@ canvas.addEventListener('pointermove',e=>{if(!entered||isLocked())return;
 function tapAt(e){const h=pick(e);if(!h)return;if(h.object.userData.id){focus(NUM[h.object.userData.id]);return}
   if(walkables.includes(h.object)){walkTo(h.point.x,h.point.z);return}
   if(h.face){const n=h.face.normal.clone().transformDirection(h.object.matrixWorld);if(Math.abs(n.y)<.5)walkTo(h.point.x+n.x*1.4,h.point.z+n.z*1.4)}}
-function endPtr(e){if(isLocked())return;if(!ptr.down||e.pointerId!==ptr.id)return;ptr.down=false;canvas.classList.remove('drag');
+function endPtr(e){if(ROUTE||isLocked())return;if(!ptr.down||e.pointerId!==ptr.id)return;ptr.down=false;canvas.classList.remove('drag');
   if(!ptr.moved&&e.type==='pointerup')tapAt(e)}
 canvas.addEventListener('pointerup',endPtr);canvas.addEventListener('pointercancel',endPtr);
 canvas.addEventListener('wheel',e=>{if(!entered)return;e.preventDefault();move=null;const s=Math.max(-.6,Math.min(.6,-e.deltaY*.003)),p=cam.position;p.x-=Math.sin(yaw)*s;p.z-=Math.cos(yaw)*s;resolve(p);closePanel()},{passive:false});
@@ -480,9 +500,11 @@ function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt,no
   requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
 
-function enterNow(noLock){entered=true;$('#intro').hidden=true;$('#nav').hidden=false;$('#bottom').hidden=false;$('#map').hidden=false;$('#b-full').hidden=!showFull;if(coarse)joyEl.hidden=false;drawMap();setModeUI();if(!noLock&&mode==='fps')lock();else if(mode!=='fps')hint(8000);canvas.focus()}
+function enterNow(noLock){if(entered)return;entered=true;$('#intro').hidden=true;$('#nav').hidden=false;$('#bottom').hidden=false;$('#map').hidden=ROUTE;$('#b-full').hidden=!showFull;drawMap();setModeUI();
+  if(ROUTE){setTimeout(()=>{if(current<0&&!move)focus(0)},350);hint(5000)}else if(!noLock&&mode==='fps')lock();else if(mode!=='fps')hint(8000);canvas.focus()}
 if(location.hash==='#in'){history.replaceState(null,'',location.pathname+location.search);enterNow(true)}
-$('#enter').onclick=()=>{entered=true;$('#intro').hidden=true;$('#nav').hidden=false;$('#bottom').hidden=false;$('#map').hidden=false;$('#b-full').hidden=!showFull;if(coarse)joyEl.hidden=false;drawMap();setModeUI();if(mode==='fps')lock();else hint(8000);canvas.focus()};
+$('#enter').onclick=e=>{if(e)e.stopPropagation();enterNow(false)};
+$('#intro').addEventListener('click',()=>enterNow(false));
 window.__GALLERY={W,TOUR,O,focus,walkTo,cam,sim:sec=>{for(let i=0;i<sec*30;i++)update(1/30,performance.now())},get loaded(){return loaded},get ready(){return roomParts>=roomTotal},enter:()=>$('#enter').click(),joy,setView:(x,z,y,p)=>{cam.position.set(x,EYE,z);yaw=y;pitch=p}};
 })();
 </script>
