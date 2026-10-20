@@ -239,7 +239,7 @@ function cityCanvas(){const w=2048,h=512,c=mk(w,h),g=c.getContext('2d');let x=0;
 const city=new THREE.Mesh(new THREE.PlaneGeometry(110,26),new THREE.MeshBasicMaterial({map:T(cityCanvas()),transparent:true}));city.position.set(0,-7,-46);scene.add(city);
 
 /* ================= room: measured model from Blender, lighting baked into a lightmap ================= */
-const texL=new THREE.TextureLoader();const AV='?b=1792465936';
+const texL=new THREE.TextureLoader();const AV='?b=1792471212';
 function tex(u){const t=texL.load(u);t.encoding=THREE.sRGBEncoding;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=maxAniso;t.flipY=false;return t}
 const lmTex=texL.load(ASSET+'lm_'+OPT.toLowerCase()+'.jpg'+AV,()=>{roomParts++;setLoading()});lmTex.encoding=THREE.sRGBEncoding;lmTex.flipY=false;lmTex.anisotropy=maxAniso;
 const ALBEDO={floor_maple:'maple.jpg',ceiling_tin:'tin.jpg',brick_painted:'brick.jpg',wall_plaster:'plaster.jpg',portable_wall:'plaster.jpg'};
