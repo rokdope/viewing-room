@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Rocky — The Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400&family=DM+Mono:wght@400&display=swap">
+<style>
+:root{--ink:#fff;--dim:rgba(255,255,255,.62);--serif:"Newsreader",Georgia,"Times New Roman",serif;color-scheme:dark}
+html,body{height:100%;margin:0}[hidden]{display:none!important}
+body{background:#020306;color:var(--ink);font-family:var(--serif);overflow:hidden;-webkit-font-smoothing:antialiased}
+#bg{position:fixed;inset:0;background:#020306 url("../door_bg.jpg") center/cover no-repeat}
+#bg::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.66),rgba(0,0,0,.2) 70%),linear-gradient(rgba(0,0,0,.4),rgba(0,0,0,.08) 45%,rgba(0,0,0,.5))}
+main{position:fixed;left:18px;top:calc(env(safe-area-inset-top,0px) + 14px);right:18px;display:grid;gap:1px;justify-items:start;font-size:19px;line-height:1.15;text-shadow:0 0 14px rgba(0,0,0,.45)}
+.name{font-size:30px;line-height:1;margin:0 0 40px}
+.embed .name{display:none}.embed main{top:calc(env(safe-area-inset-top,0px) + 14px)}
+h1{margin:0 0 1.15em;font-weight:400;font-size:inherit;line-height:inherit}
+.meta{color:var(--dim)}
+form{display:grid;gap:10px;justify-items:start;margin-top:2px}
+label{color:var(--dim);font-size:15px}
+input{all:unset;box-sizing:border-box;width:min(300px,calc(100vw - 36px));font:inherit;font-size:19px;color:#fff;border-bottom:1px solid rgba(255,255,255,.55);padding:4px 0 6px;cursor:text}
+input::placeholder{color:rgba(255,255,255,.4)}input:focus{border-bottom-color:#fff}
+.row{display:flex;gap:22px;align-items:baseline}
+.t{all:unset;cursor:pointer;color:var(--ink);font:inherit}
+@media (hover:hover){.t:hover{opacity:.6}}
+.t:focus-visible{outline:1px solid #fff;outline-offset:3px}
+#not{color:var(--dim);font-size:15px}
+.note{color:var(--dim);font-size:13px;max-width:300px;line-height:1.35;margin:0}
+#live{position:fixed;left:18px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);color:var(--dim);font-size:15px;text-shadow:0 0 14px rgba(0,0,0,.45)}
+#live i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#cfd8ff;margin-right:8px;vertical-align:1px;box-shadow:0 0 8px #cfd8ff}
+@media (pointer:coarse){.t{padding:9px 8px;margin:-9px -8px}}
+</style></head>
+<body>
+<div id="bg"></div>
+<main>
+  <p class="name">Rocky</p>
+  <h1>The Room<br><span class="meta">17 photographs</span></h1>
+  <form id="f" autocomplete="on">
+    <label for="n" id="lab">Leave your name to enter</label>
+    <input id="n" name="name" maxlength="60" placeholder="Your name" autocomplete="name" enterkeyhint="go">
+    <div class="row"><button class="t" id="go" type="submit">Enter</button><button class="t" id="not" type="button" hidden>Not you?</button></div>
+    <p class="note">Your name goes in the guestbook, and the others walking around the room will see it above your ghost.</p>
+  </form>
+</main>
+<p id="live" hidden><i></i><span id="live-t"></span></p>
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script>
+(function(){
+const ROOM='room.html',MPURLS=["wss://broker.emqx.io:8084/mqtt", "wss://broker.hivemq.com:8884/mqtt"],MPT='rokdope/theroom/v1/c/';
+const $=s=>document.querySelector(s);
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const clean=v=>String(v||'').replace(/[\u0000-\u001f<>]/g,'').replace(/\s+/g,' ').trim().slice(0,60);
+const embedded=window.top!==window.self;if(embedded)document.documentElement.classList.add('embed');
+const inp=$('#n'),known=clean(store.get('theroom.name'));
+if(known){inp.value=known;$('#lab').textContent='Welcome back';$('#not').hidden=false;$('#go').textContent='Enter as '+known}
+inp.addEventListener('input',()=>{$('#go').textContent='Enter';$('#not').hidden=true});
+$('#not').onclick=()=>{inp.value='';inp.focus();$('#lab').textContent='Leave your name to enter';$('#go').textContent='Enter';$('#not').hidden=true};
+$('#f').addEventListener('submit',e=>{e.preventDefault();const n=clean(inp.value);
+  if(!n){inp.focus();$('#lab').textContent='Your name first';return}
+  store.set('theroom.name',n);inp.blur();
+  const url=new URL(ROOM,location.href).href+'#n='+encodeURIComponent(n);
+  if(!embedded){location.href=url;return}
+  /* open the room full size, on top of the site; if the site's frame doesn't allow that, a new tab */
+  let left=false;addEventListener('pagehide',()=>{left=true});
+  try{const a=document.createElement('a');a.href=url;a.target='_top';document.body.appendChild(a);a.click();a.remove()}catch(err){}
+  setTimeout(()=>{if(!left&&!document.hidden)window.open(url,'_blank')},900)});
+/* how many people are in the room right now (listen only) */
+if(window.mqtt&&MPURLS.length){const seen=new Map();let c;
+  function show(){const now=Date.now();seen.forEach((t,id)=>{if(now-t>9000)seen.delete(id)});const k=seen.size;
+    $('#live').hidden=!k;$('#live-t').textContent=k===1?'1 person in the room right now':k+' people in the room right now'}
+  try{c=mqtt.connect(MPURLS[0],{clientId:'door_'+Math.random().toString(36).slice(2,10),keepalive:30,reconnectPeriod:8000,connectTimeout:8000,clean:true});
+    c.on('connect',()=>c.subscribe(MPT+'#',{qos:0}));
+    c.on('message',(topic,buf)=>{const p=topic.slice(MPT.length).split('/');if(p[0]==='s'&&p[1])seen.set(p[1],Date.now());else if(p[0]==='bye')seen.delete(p[1]);show()});
+    c.on('error',()=>{});setInterval(show,3000);addEventListener('pagehide',()=>{try{c.end(true)}catch(e){}})}catch(e){}}
+})();
+</script>
+</body></html>
