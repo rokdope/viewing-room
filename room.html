@@ -164,7 +164,7 @@ body{color:var(--ink);background:#fff}
 .t:focus-visible{outline:1px solid var(--ink)}
 .cap,.mono,.sub{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim)}
 #top{left:20px;top:calc(env(safe-area-inset-top,0px) + 16px);gap:0}
-#top .name,#nav{font-size:clamp(19px,1.45vw,30px);line-height:1.08}
+#top .name,#nav{font-size:clamp(19px,1.33vw,34px);line-height:1.08}
 #top .name{margin:0}
 #nav{gap:0;margin-top:0}
 #nav .t.on{color:var(--red)}
@@ -184,7 +184,7 @@ body{color:var(--ink);background:#fff}
 #p-acts .t{font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim)}
 @media (hover:hover){#p-acts .t:hover{color:var(--ink)}}
 #intro{background:rgba(255,255,255,.18)}
-#intro .inner{left:20px;top:calc(env(safe-area-inset-top,0px) + 16px);font-size:clamp(19px,1.45vw,30px);line-height:1.08}
+#intro .inner{left:20px;top:calc(env(safe-area-inset-top,0px) + 16px);font-size:clamp(19px,1.33vw,34px);line-height:1.08}
 #intro .meta{color:var(--dim)}
 #gb-form label,#gb-not{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim)}
 #gb-form{gap:12px;margin-top:6px}
@@ -383,7 +383,7 @@ function cityCanvas(){const w=2048,h=512,c=mk(w,h),g=c.getContext('2d');let x=0;
 const city=new THREE.Mesh(new THREE.PlaneGeometry(110,26),new THREE.MeshBasicMaterial({map:T(cityCanvas()),transparent:true}));city.position.set(0,-7,-46);scene.add(city);
 
 /* ================= room: measured model from Blender, lighting baked into a lightmap ================= */
-const texL=new THREE.TextureLoader();const AV='?b=1793783534';
+const texL=new THREE.TextureLoader();const AV='?b=1793783964';
 function tex(u){const t=texL.load(u);t.encoding=THREE.sRGBEncoding;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=maxAniso;t.flipY=false;return t}
 const lmTex=texL.load(ASSET+'lm_'+OPT.toLowerCase()+'.jpg'+AV,()=>{roomParts++;setLoading()});lmTex.encoding=THREE.sRGBEncoding;lmTex.flipY=false;lmTex.anisotropy=maxAniso;
 const ALBEDO={floor_maple:'maple.jpg',ceiling_tin:'tin.jpg',brick_painted:'brick.jpg',wall_plaster:'plaster.jpg',portable_wall:'plaster.jpg'};
@@ -396,6 +396,7 @@ new THREE.GLTFLoader().load(ASSET+'room_'+OPT.toLowerCase()+'.glb'+AV,g=>{
     const isGear=o.name.startsWith('gear')||(o.parent&&o.parent.name.startsWith('gear'));
     const mb=new THREE.MeshBasicMaterial({color:m.color.clone(),lightMap:isGear?gTex:lmTex,lightMapIntensity:LMK});
     if(n.startsWith('g_curtain'))mb.side=THREE.DoubleSide;
+    if(n.startsWith('g_rod')){mb.lightMap=null;mb.color.setRGB(.42,.32,.17)}
     if(ALBEDO[n]){mb.map=tex(ASSET+ALBEDO[n]+AV);if(REPEAT[n])mb.map.repeat.set(REPEAT[n],REPEAT[n]);mb.color.setRGB(1,1,1)}
     if(n==='mirror'){mb.lightMap=null;mb.color.setRGB(.42,.45,.5)}
     if(n==='door_grey'){mb.lightMap=null;mb.map=tex(ASSET+'door.jpg'+AV);mb.color.setRGB(.27,.265,.26)}   /* doors: flat clean paint, the dim bounce light on them was all noise */
