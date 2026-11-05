@@ -155,6 +155,7 @@ html,body,button{touch-action:manipulation;-webkit-tap-highlight-color:transpare
 #b-gb,#guestbook{display:none!important}
 #lockmsg{display:none!important}
 #hint,#i-ctrl{display:none!important}
+@media (pointer:fine){#map{display:none!important}}
 
 /* =================== Rocky's site look: ink on white scrims, Gramercy-like serif, small grey mono, red for "you are here" =================== */
 :root{--ink:#111;--dim:#8d8d8d;--red:#ff0000;--card:rgba(255,255,255,.86);--mono:"DM Mono",ui-monospace,Menlo,monospace;color-scheme:light}
@@ -215,7 +216,13 @@ body{color:var(--ink);background:#fff}
 #lightbox img{max-height:calc(100vh - 120px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
 #lightbox .bar{font-family:var(--serif);font-size:17px;text-transform:none;letter-spacing:0;color:var(--ink)}
 #lb-title{color:var(--ink)}#lb-title i{font-style:normal;font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);margin-left:12px}
-#lb-close{font-family:var(--serif);font-size:17px}
+#lb-close,#lb-go{font-family:var(--serif);font-size:17px}
+.lb-acts{display:flex;gap:22px;align-items:baseline;white-space:nowrap}
+#lb-prev,#lb-next{font-family:var(--serif);font-size:17px}
+#lb-n{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;color:var(--dim)}
+#lb-title{min-width:0;overflow-wrap:anywhere}
+@media (max-width:700px){#lightbox .bar{flex-wrap:wrap;gap:8px 18px}}
+#lightbox .stage{touch-action:pan-y}
 #hint{color:var(--ink);font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;text-shadow:0 0 10px rgba(255,255,255,.9),0 0 3px rgba(255,255,255,.9)!important}
 #loading{color:var(--dim);font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase}
 #cross{background:var(--ink);box-shadow:0 0 0 1.5px rgba(255,255,255,.8)}
@@ -311,7 +318,7 @@ body{color:var(--ink);background:#fff}
 
   <div id="lightbox" hidden role="dialog" aria-label="Image">
     <div class="stage"><img id="lb-img" alt=""></div>
-    <div class="bar mono"><span id="lb-title"></span><button class="t" id="lb-close">Close</button></div>
+    <div class="bar mono"><span id="lb-title"></span><span class="lb-acts"><button class="t" id="lb-prev">&larr;</button><span id="lb-n"></span><button class="t" id="lb-next">&rarr;</button><button class="t" id="lb-go">In the room</button><button class="t" id="lb-close">Close</button></span></div>
   </div>
   <span class="mono" id="loading"></span>
 </div>
@@ -526,9 +533,6 @@ TOUR.forEach(id=>{
     const gl=new THREE.Mesh(new THREE.PlaneGeometry(w.paperW,w.paperH),glassMat);gl.position.z=.0302;gl.renderOrder=3;
     g.add(pp,gl);pp.userData.id=gl.userData.id=id;pickables.push(pp,gl);
     const isCyc=face==='n'&&(Math.abs(z-CYC.face)<.01||O.hung.includes(id));
-    const lab=new THREE.Mesh(new THREE.PlaneGeometry(.2,.1),new THREE.MeshBasicMaterial({map:T(labelCanvas(w)),color:0xd2cfc8}));
-    if(isCyc)lab.position.set(-w.ow/2+.1,-w.oh/2-.1,.012);else if(face==='s'&&Math.abs(z-ZN)<.01)lab.position.set(0,-w.oh/2-.12,.012);else lab.position.set(w.ow/2+.2,-w.oh/2+.08,.012);
-    g.add(lab);lab.userData.id=id;pickables.push(lab);
   }
   const ph=new THREE.Mesh(new THREE.PlaneGeometry(w.imgW,w.imgH),new THREE.MeshBasicMaterial({color:0x2a2b2f}));ph.position.z=w.polaroid?.003:.0125;g.add(ph);ph.userData.id=id;pickables.push(ph);
   if(w.polaroid){const back=new THREE.Mesh(new THREE.PlaneGeometry(w.imgW+.02,w.imgH+.035),paperMat);back.position.set(0,-.006,.001);g.add(back)}
@@ -560,8 +564,8 @@ function findPath(ax,az,bx,bz){
   if(dist[n-1]===Infinity)return[[bx,bz]];const out=[];let u=n-1;while(u>0){out.unshift(pts[u]);u=prev[u]}return out}
 
 /* ================= camera control ================= */
-const YAW0=-1.45;let yaw=YAW0,pitch=.02,entered=false,current=-1,move=null,bob=0;const vel={x:0,z:0};
-cam.position.set(X0+.7+Math.random()*.5,EYE,DOOR.z+(Math.random()-.5)*.9);   /* spread out a little so people don't all stand in one spot at the door */
+const YAW0=Math.PI;let yaw=YAW0,pitch=.02,entered=false,current=-1,move=null,bob=0;const vel={x:0,z:0};
+cam.position.set(2.6+Math.random()*.5,EYE,2.4+Math.random()*.6);   /* you arrive in the main room looking at the cyc, spread out a little */
 const angDiff=(a,b)=>{let d=(b-a)%(Math.PI*2);if(d>Math.PI)d-=Math.PI*2;if(d<-Math.PI)d+=Math.PI*2;return d};
 function travel(tx,tz,fyaw,fpitch,done){
   const p=cam.position,path=findPath(p.x,p.z,tx,tz);
@@ -588,9 +592,21 @@ function openPanel(w){
 }
 function closePanel(){$('#panel').hidden=true;if(typeof setModeUI==='function')setModeUI()}
 $('#p-close').onclick=closePanel;
-$('#p-full').onclick=()=>{if(isLocked())document.exitPointerLock();const w=W[TOUR[current]];if(!w)return;$('#lb-img').src=w.src;$('#lb-img').alt=w.t;{const lt=$('#lb-title');lt.textContent=w.t;const sub=document.createElement('i');sub.textContent=`${w.t!==w.s?w.s+'  \u00b7  ':''}${fmtSize(w.pw,w.ph)}  \u00b7  Edition of 5`;lt.appendChild(sub)}$('#lightbox').hidden=false;if(!coarse)$('#lb-close').focus()};
+let lbIndex=-1;
+function openLB(i){i=(i+TOUR.length)%TOUR.length;lbIndex=i;const w=W[TOUR[i]];if(isLocked())document.exitPointerLock();
+  const im=$('#lb-img');im.src=w.src;im.alt=w.t;const lt=$('#lb-title');lt.textContent=w.t;const sub=document.createElement('i');
+  sub.textContent=`${w.t!==w.s?w.s+'  ·  ':''}${fmtSize(w.pw,w.ph)}  ·  Edition of 5`;lt.appendChild(sub);
+  $('#lb-n').textContent=`${String(i+1).padStart(2,'0')} / ${TOUR.length}`;$('#lightbox').hidden=false;if(!coarse)$('#lb-close').focus();
+  const pre=new Image();pre.src=W[TOUR[(i+1)%TOUR.length]].src}
+$('#p-full').onclick=()=>{if(current>=0)openLB(current)};
+$('#lb-prev').onclick=()=>openLB(lbIndex-1);$('#lb-next').onclick=()=>openLB(lbIndex+1);
+$('#lb-go').onclick=()=>{$('#lightbox').hidden=true;$('#index').hidden=true;focus(lbIndex)};
 $('#lb-close').onclick=()=>{$('#lightbox').hidden=true;setModeUI()};
-$('#lightbox').addEventListener('click',e=>{if(e.target.id==='lightbox'||e.target.classList.contains('stage'))$('#lightbox').hidden=true});
+$('#lightbox').addEventListener('click',e=>{if(e.target.id==='lightbox')$('#lightbox').hidden=true});
+{let sx=0,sy=0,st=0;const stg=$('#lightbox .stage');
+  stg.addEventListener('pointerdown',e=>{sx=e.clientX;sy=e.clientY;st=performance.now()});
+  stg.addEventListener('pointerup',e=>{const dx=e.clientX-sx,dy=e.clientY-sy;if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5&&performance.now()-st<700)openLB(lbIndex+(dx<0?1:-1))})}
+document.addEventListener('keydown',e=>{if($('#lightbox').hidden)return;if(e.key==='ArrowRight')openLB(lbIndex+1);else if(e.key==='ArrowLeft')openLB(lbIndex-1)});
 function renderIndex(){const body=$('#index-body');body.innerHTML='';let last=null,grid=null;
   TOUR.forEach((id,i)=>{const w=W[id];
     if(w.s!==last){last=w.s;const h=document.createElement('h3');h.className='series';h.style.fontWeight='400';h.textContent=w.s;body.appendChild(h);grid=document.createElement('div');grid.className='grid';body.appendChild(grid)}
@@ -598,7 +614,7 @@ function renderIndex(){const body=$('#index-body');body.innerHTML='';let last=nu
     b.innerHTML='<span class="thumb"><img alt="" loading="lazy"></span><span class="cap"></span>';
     b.querySelector('img').src=w.src;b.querySelector('img').alt=w.t;
     const cap=b.querySelector('.cap');const num=document.createElement('i');num.textContent=String(i+1).padStart(2,'0');cap.append(num,document.createTextNode(w.t));
-    b.onclick=()=>{$('#index').hidden=true;focus(i)};grid.appendChild(b)})}
+    b.onclick=()=>openLB(i);grid.appendChild(b)})}
 $('#b-index').onclick=()=>{if(isLocked())document.exitPointerLock();renderIndex();$('#index').hidden=false;$('#close-index').focus()};
 $('#close-index').onclick=()=>{$('#index').hidden=true;setModeUI()};
 $('#index').addEventListener('click',e=>{if(e.target.id==='index')$('#index').hidden=true});
